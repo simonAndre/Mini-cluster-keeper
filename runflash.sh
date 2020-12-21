@@ -1,33 +1,70 @@
 #!/bin/bash
-# utilisation : ./runflash <nom_instance> <device> [<image>] [<wifi ssid> <wifi passwd>]
+# utilisation : ./runflash <nom_instance> <device> [<image>] [-w<wifi ssid> -p<wifi passwd>]
 
 defaultimage='https://github.com/hypriot/image-builder-rpi/releases/download/v1.12.3/hypriotos-rpi-v1.12.3.img.zip'
 
-help() {
-    echo "rpi flashing utility for making private cloud instances on raspberry pi"
-    echo "usage : ./runflash <instance name> <device> [<image>] [<wifi ssid> <wifi passwd>]"
-    echo "[<image>] is a file (zipped or unzipped) or an http location. Default to hypriot v1.12.3"
+usage() {
+    echo """  
+runflash: runflash [OPTION] <instance_name> <device>
+    rpi flashing utility for making private cloud instances on raspberry pi
+
+    Mandatory args: 
+        <instance_name> name of the new instance to flash
+        <device>        device to flash (don't provide a partition but the whole device). Be carreful, as it will be rewritten    
+
+    Options:
+        -d          instance data directory
+        -i          image file (zipped or unzipped) or an http location. Default to hypriot v1.12.3
+        -w          Wifi ssid
+        -p          Wifi password
+"""
+}
+exit_abnormal() {
+  usage
+  exit 1
 }
 
-case $# in
-    2) instanceName=$1; deviceToFlash=$2; image=$defaultimage ;;
-    3) instanceName=$1; deviceToFlash=$2; image=$3 ;;
-    4) instanceName=$1; deviceToFlash=$2; image=$defaultimage; wifissid=$3; wifipass=$4 ;;
-    5) instanceName=$1; deviceToFlash=$2; image=$3; wifissid=$4; wifipass=$5 ;;
-    *) help; echo "bad argument count"; exit 1 ;;
-esac
+# parse des arguments optionnels
+while getopts 'hd:i:w:p:' flag; do
+    case "${flag}" in
+	d)  if [ -d $OPTARG ]; then INSTANCE_DIR=$OPTARG; else echo "bad directory for instance dir">&2; exit 1; fi;;
+	i)  defaultimage=$OPTARG;;
+	w)  wifissid=$OPTARG;;
+	p)  wifipass=$OPTARG;;
+    h)  help; exit 0;;
+    :)  echo "Missing option argument for -$OPTARG" >&2;exit_abnormal; exit 1;;
+	*)  exit_abnormal;;
+	esac
+done
 
-if ! [[ -e ./instances_data/$instanceName ]]; then echo "no instance data entry for $instanceName"; exit 1; fi
+# on shifte des arguments optionnels pour ne conserver que les obligatoires (non précédés par -)
+shift $((OPTIND - 1))
+if [ $# -ne 2 ]; then echo "Check your args, expecting 2 mandatory args, actual: $#.">&2; exit_abnormal; fi
+instanceName=$1; deviceToFlash=$2;
 
-echo "writing image [$image] on device [$deviceToFlash] for instance [$instanceName]"
+# test existance deviceToFlash
+[ -e $deviceToFlash ] && echo "device to flash: $deviceToFlash" || (echo "bad device: $deviceToFlash">&2; exit_abnormal)
 
-if [[ -n $wifissid ]] && [[ -n $wifipass ]]
+# assignation par défaut de INSTANCE_DIR à partir du nom de l'image (si non définit par l'option)
+: ${INSTANCE_DIR:="./instances_data/$instanceName"} 
+
+# test existnace repertoire d'instance
+if ! [[ -e $INSTANCE_DIR ]]; then echo "no instance data entry for $instanceName"; exit 1; fi
+
+echo "writing image [$image] on device [$deviceToFlash] for instance [$instanceName], using instance directory: $INSTANCE_DIR"
+
+if [[ -n $wifissid ]]
 then
-	wifiargs="--ssid $wifissid --password $wifipass"
-    echo "using wifi ssid $wifissid and password ****"
+	[[ -n $wifipass ]] && (wifiargs="--ssid $wifissid --password $wifipass"; \
+        echo "using wifi ssid $wifissid and password ****") \
+        || (echo "Missed password for WIFI">&2; exit_abnormal)
 fi
 
-(cd ./instances_data/$instanceName && tar -czvf ../../boot_secrets.tgz .)
+CWD=$PWD
+
+(cd $INSTANCE_DIR && tar -czvf $CWD/boot_secrets.tgz .)
+
+
 
 sudo ./flash --hostname $instanceName \
 --device $deviceToFlash --bootconf ./config.txt --userdata ./user-data.yml \

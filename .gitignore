@@ -1,0 +1,4 @@
+# exclude everything except directory template and this file
+/*
+!/template
+!/.gitignore

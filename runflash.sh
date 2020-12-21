@@ -1,7 +1,7 @@
 #!/bin/bash
 # utilisation : ./runflash <nom_instance> <device> [<image>] [-w<wifi ssid> -p<wifi passwd>]
 
-defaultimage='https://github.com/hypriot/image-builder-rpi/releases/download/v1.12.3/hypriotos-rpi-v1.12.3.img.zip'
+flashimage='https://github.com/hypriot/image-builder-rpi/releases/download/v1.12.3/hypriotos-rpi-v1.12.3.img.zip'
 
 usage() {
     echo """  
@@ -28,7 +28,7 @@ exit_abnormal() {
 while getopts 'hd:i:w:p:' flag; do
     case "${flag}" in
 	d)  if [ -d $OPTARG ]; then INSTANCE_DIR=$OPTARG; else echo "bad directory for instance dir">&2; exit 1; fi;;
-	i)  defaultimage=$OPTARG;;
+	i)  flashimage=$OPTARG;;
 	w)  wifissid=$OPTARG;;
 	p)  wifipass=$OPTARG;;
     h)  help; exit 0;;
@@ -68,7 +68,7 @@ CWD=$PWD
 
 sudo ./flash --hostname $instanceName \
 --device $deviceToFlash --bootconf ./config.txt --userdata ./user-data.yml \
-$wifiargs --file ./boot_secrets.tgz $image
+$wifiargs --file ./boot_secrets.tgz $flashimage
 
 rm boot_secrets.tgz
 

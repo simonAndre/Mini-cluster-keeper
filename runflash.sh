@@ -17,6 +17,9 @@ runflash: runflash [OPTION] <instance_name> <device>
         -i          image file (zipped or unzipped) or an http location. Default to hypriot v1.12.3
         -w          Wifi ssid
         -p          Wifi password
+
+    example : 
+        ./runflash.sh -d ./instances_data/home_instances/sanelec3/ -i https://github.com/hypriot/image-builder-rpi/releases/download/v1.12.3/hypriotos-rpi-v1.12.3.img.zip -w serenandre -p moustik77 sanelec3 /dev/sdb
 """
 }
 exit_abnormal() {

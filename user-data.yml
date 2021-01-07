@@ -51,8 +51,8 @@ runcmd:
   - 'systemctl restart avahi-daemon'
   - 'ifup wlan0'
   - 'sleep 10'
-  - 'mkdir -p /home/pi/boot_data && tar -xvzf /boot/boot_secrets.tgz -C /home/pi/boot_data && chown pi -R /home/pi/boot_data'
-  - su pi -c 'bash /home/pi/boot_data/initinstance.sh' && rm /boot/boot_secrets.tgz
+  - 'mkdir -p /home/pi/boot_data && cd /home/pi/boot_data && tar -xvzf /boot/boot_secrets.tgz && chown pi -R /home/pi/boot_data'
+  - 'bash /home/pi/boot_data/initinstance.sh && rm /boot/boot_secrets.tgz'
 
 
 write_files:

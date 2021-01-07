@@ -48,13 +48,17 @@ instanceName=$1; deviceToFlash=$2;
 # test existance deviceToFlash
 [ -e $deviceToFlash ] && echo "device to flash: $deviceToFlash" || (echo "bad device: $deviceToFlash">&2; exit_abnormal)
 
+
 # assignation par défaut de INSTANCE_DIR à partir du nom de l'image (si non définit par l'option)
 : ${INSTANCE_DIR:="./instances_data/$instanceName"} 
 
 # test existnace repertoire d'instance
 if ! [[ -e $INSTANCE_DIR ]]; then echo "no instance data entry for $instanceName"; exit 1; fi
 
-echo "writing image [$image] on device [$deviceToFlash] for instance [$instanceName], using instance directory: $INSTANCE_DIR"
+# fichier user-data.yml : soit dans le rep d'instance sinon on utiilse celui de la racine
+[ -e $INSTANCE_DIR/user-data.yml ] && userdatafile=$INSTANCE_DIR/user-data.yml || userdatafile=./user-data.yml
+
+echo "writing image [$flashimage] on device [$deviceToFlash] for instance [$instanceName], using instance directory: $INSTANCE_DIR and user-data file : $userdatafile"
 
 if [[ -n $wifissid ]]
 then
@@ -70,7 +74,7 @@ CWD=$PWD
 
 
 sudo ./flash --hostname $instanceName \
---device $deviceToFlash --bootconf ./config.txt --userdata ./user-data.yml \
+--device $deviceToFlash --bootconf ./config.txt --userdata $userdatafile \
 $wifiargs --file ./boot_secrets.tgz $flashimage
 
 rm boot_secrets.tgz

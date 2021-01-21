@@ -1,0 +1,2 @@
+UUID=445C75745C75619A   /media/ssd_alk1	ntfs-3g	noauto,guest,rw,noperm,sec=none        0       0
+//homeserver/ssd_alk1 /media/ssd_alk1 cifs credentials=/etc/win-credentials,dir_mode=0755,file_mode=0755,uid=pi,gid=pi
